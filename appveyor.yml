@@ -49,8 +49,10 @@ for:
     only:
       - ci
   test_script:
-    - git config --global user.email "appveyor@appveyor.com"
-    - git config --global user.name "AppVeyorBot"
+    - git config --global credential.helper store
+    - ps: Add-Content "$HOME\.git-credentials" "https://$($env:GH_TOKEN):x-oauth-basic@github.com`n"
+    - git config --global user.email $env:APPVEYOR_REPO_COMMIT_AUTHOR
+    - git config --global user.name $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL
     - ps: $(git stash | Out-Host; $?) -or $(exit 1 | Out-Host; $?)
     - ps: $(git remote set-branches --add origin develop | Out-Host; $?) -or $(exit 1 | Out-Host; $?)
     - git fetch origin develop
