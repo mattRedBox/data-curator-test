@@ -49,11 +49,13 @@ for:
   branches:
     only:
       - ci
+  skip_commits:
+    message: /^appveyor Updating branch from appveyor build.$/
   test_script:
     - git config --global credential.helper store
     - ps: Add-Content "$HOME\.git-credentials" "https://$($env:GH_TOKEN):x-oauth-basic@github.com`n"
-    - git config --global user.email $env:APPVEYOR_REPO_COMMIT_AUTHOR
-    - git config --global user.name $env:APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL
+    - git config --global user.email %APPVEYOR_REPO_COMMIT_AUTHOR%
+    - git config --global user.name %APPVEYOR_REPO_COMMIT_AUTHOR_EMAIL%
     - ps: $(git stash | Out-Host; $?) -or $(exit 1 | Out-Host; $?)
     - ps: $(git remote set-branches --add origin develop | Out-Host; $?) -or $(exit 1 | Out-Host; $?)
     - git fetch origin develop
