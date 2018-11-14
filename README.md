@@ -6,6 +6,7 @@
 [![Appveyor Build status](https://ci.appveyor.com/api/projects/status/328u6jjoymoiqwos/branch/ci?svg=true)](https://ci.appveyor.com/project/mattRedBox/data-curator-test)
 [![Appveyor Acceptance Test status](https://img.shields.io/badge/acceptance%20tests-✔passed:%2034%20%20❌failed:%200%20%20❗undefined:%200-orange.svg)](https://ci.appveyor.com/project/mattRedBox/data-curator-test)
 
+
 [![Unit Test Coverage Status](https://coveralls.io/repos/github/mattRedBox/data-curator-test/badge.svg?branch=ci)](https://coveralls.io/github/mattRedBox/data-curator-test?branch=ci)
 [![Github All Releases](https://img.shields.io/github/downloads/mattRedBox/data-curator-test/total.svg)](https://github.com/mattRedBox/data-curator-test/releases)
 [![Github Releases](https://img.shields.io/github/downloads/mattRedBox/data-curator-test/latest/total.svg?label=Latest%20version%20downloads)](https://github.com/mattRedBox/data-curator-test/releases/latest)
