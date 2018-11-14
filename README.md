@@ -3,7 +3,7 @@
 [![JavaScript Style Guide](https://img.shields.io/badge/js_code_style-standard-brightgreen.svg)](https://standardjs.com)
  [![vue-recommended-style](https://img.shields.io/badge/vue_code_style-recommended-brightgreen.svg?style=flat)](https://vuejs.org/v2/style-guide/#Priority-C-Recommended)
 [![Travis Build Status](https://travis-ci.org/mattRedBox/data-curator-test.svg?branch=ci)](https://travis-ci.org/mattRedBox/data-curator-test)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/fahwo5shvb6jl9ux/branch/ci?svg=true)](https://ci.appveyor.com/project/mattRedBox/data-curator-test)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/328u6jjoymoiqwos/branch/ci?svg=true)](https://ci.appveyor.com/project/mattRedBox/data-curator-test)
 [![Appveyor Acceptance Test status](https://img.shields.io/badge/acceptance%20tests-✔passed:%2034%20%20❌failed:%200%20%20❗undefined:%200-orange.svg)](https://ci.appveyor.com/project/mattRedBox/data-curator-test)
 
 [![Unit Test Coverage Status](https://coveralls.io/repos/github/mattRedBox/data-curator-test/badge.svg?branch=ci)](https://coveralls.io/github/mattRedBox/data-curator-test?branch=ci)
