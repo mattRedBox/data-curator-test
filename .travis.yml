@@ -12,18 +12,18 @@ install:
 - curl -o- -L https://yarnpkg.com/install.sh | bash
 - source ~/.bashrc
 - yarn
-script: true
+script: commit_message !~ /^appveyor Updating branch from appveyor build.$/
 stages:
   - name: prescript
-    if: branch IN (ci) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/
+    if: branch IN (ci)
   - name: lint
     if: branch IN (master, ci, testci, develop) OR type == pull_request OR tag =~ /^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/
   - name: unittest
     if: branch IN (master) OR type IN (pull_request)
   - name: unittestandcoverage
-    if: branch IN (ci, testci) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/
+    if: branch IN (ci, testci)
   - name: test
-    if: branch IN (ci, testci, master) OR type IN (pull_request) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/
+    if: type IN (pull_request) OR branch IN (ci, testci, master)
   - name: build
     if: tag =~ /^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/
 jobs:
