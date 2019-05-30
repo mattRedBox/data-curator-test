@@ -21,9 +21,9 @@ stages:
   - name: unittest
     if: branch IN (master) OR type IN (pull_request)
   - name: unittestandcoverage
-    if: branch IN (ci, testci)
+    if: branch IN (ci, testci) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/
   - name: test
-    if: type IN (pull_request) OR branch IN (ci, testci, master)
+    if: type IN (pull_request) OR (branch IN (ci, testci, master) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/)
   - name: build
     if: tag =~ /^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/
 jobs:
