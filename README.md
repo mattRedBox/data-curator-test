@@ -1,5 +1,5 @@
 
-[![GitHub package version](https://img.shields.io/github/package-json/v/mattRedBox/data-curator-test.svg)](https://github.com/mattRedBox/data-curator-test/releases)
+[![GitHub package version](https://img.shields.io/github/package-json/v/ODIQueensland/data-curator.svg)](https://github.com/ODIQueensland/data-curator/releases)
 [![JavaScript Style Guide](https://img.shields.io/badge/js_code_style-standard-brightgreen.svg)](https://standardjs.com)
  [![vue-recommended-style](https://img.shields.io/badge/vue_code_style-recommended-brightgreen.svg?style=flat)](https://vuejs.org/v2/style-guide/#Priority-C-Recommended)
 [![Travis Build Status](https://travis-ci.org/mattRedBox/data-curator-test.svg?branch=ci)](https://travis-ci.org/mattRedBox/data-curator-test)
