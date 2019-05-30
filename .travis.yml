@@ -42,11 +42,14 @@ jobs:
       os: osx
     - os: linux
     - stage: unittest
+      os: osx
       script:
       - yarn run clean
       - yarn run unit
-      os: osx
     - os: linux
+      script:
+      - yarn run clean
+      - ./scripts/travis_headless_linux_unit_tests_script.sh
     - stage: unittestandcoverage
 #      only allow failures when not in a critical branch (ie: master, tag)
       allow_failures:
