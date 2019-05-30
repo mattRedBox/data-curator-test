@@ -15,8 +15,7 @@ install:
 script: true
 stages:
   - name: prescript
-    if: branch IN (ci) AND \
-    commit_message !~ /^appveyor Updating branch from appveyor build.$/
+    if: branch IN (ci)
   - name: lint
     if: type == pull_request OR tag =~ /^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/ OR
     (branch IN (master, ci, testci, develop) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/)
