@@ -17,7 +17,8 @@ export function stubSimpleTabStore (hot) {
       tabIndex: -1,
       activeTitle: '',
       hotTabs: {},
-      hot: hot
+      hot: hot,
+      filenames: []
     },
 
     getters: {
@@ -32,6 +33,9 @@ export function stubSimpleTabStore (hot) {
       },
       getTabIndex: state => {
         return 0
+      },
+      getTabFilenames: state => {
+        return state.filenames
       },
       getHotSelection: (state, getters) => (hotId) => {
         return [0, 0, 0, 0]

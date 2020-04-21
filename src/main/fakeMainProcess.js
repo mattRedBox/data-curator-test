@@ -1,3 +1,5 @@
+const fs = require('fs-extra')
+
 /**
  heavily borrowed from https://github.com/joe-re/spectron-fake-dialog
  **/
@@ -21,6 +23,13 @@ class FakeMain {
 
   mockFunction (value, ...args) {
     const [window, options, callback] = this.parseArgs(...args)
+    Fs.writeFileSync('e2dtest.log', [window, options, callback], function (err) {
+      if (err) {
+        console.error(err)
+      } else {
+        console.log('write done.')
+      }
+    })
     console.log(`options are: ${options}`)
     console.dir(options)
     console.log('callback is:')
