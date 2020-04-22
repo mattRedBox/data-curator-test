@@ -166,12 +166,13 @@ function addContributorsRequirements (properties, requiredMessages, entityName) 
   for (let contributor of properties.contributors) {
     if (hasAllEmptyValues(contributor)) {
       _.pull(properties.contributors, contributor)
-    } else if (!contributor.title || contributor.title.trim() === '') {
+    } else if (_.isEmpty(_.get(contributor, 'title')) || contributor.title.trim() === '') {
       requiredMessages.push(`At least 1 ${entityName} contributor does not have a title.`)
       return false
     } else {
-      // console.log('contributor is valid')
+      console.log('contributor is valid')
     }
+    console.dir(contributor)
   }
   if (properties.contributors.length < 1) {
     properties.contributors = null
