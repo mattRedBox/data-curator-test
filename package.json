@@ -1,6 +1,6 @@
 {
   "name": "DataCurator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": " <matt@redboxresearchdata.com.au>",
   "description": "Data Curator is a simple desktop CSV editor to help describe, validate and share usable open data",
   "license": "MIT",
@@ -166,7 +166,7 @@
     "del": "^3.0.0",
     "devtron": "^1.4.0",
     "electron": "^2.0.12",
-    "electron-builder": "^20.44.4",
+    "electron-builder": "^21.2.0",
     "electron-debug": "^1.5.0",
     "electron-devtools-installer": "^2.2.4",
     "eslint": "^5.7.0",
