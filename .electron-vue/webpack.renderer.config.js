@@ -150,7 +150,6 @@ let rendererConfig = {
   },
   plugins: [
     new VueLoaderPlugin(),
-    // new MiniCssExtractPlugin({filename: 'styles.css'}),
     createHtmlPlugin('index'),
     createHtmlPlugin('keyboardhelp'),
     createHtmlPlugin('urldialog'),

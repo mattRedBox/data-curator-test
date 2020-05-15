@@ -10,9 +10,8 @@ Feature: Support Forum
   - Support will be launched in a separate browser window that will require access to the internet
   - The Support URL will be on https://odiqueensland.github.io/data-curator-help
 
-  @dev
   @impl
   Scenario: Data Curator Help
     Given Data Curator is open
     When  "Data Curator Help" is invoked using the "application menu selection": "Help->Data Curator Help"
-    Then a call to open an external url to "https://odiqueensland.github.io/data-curator-help" should be made
+    Then a call to open an external url should be made

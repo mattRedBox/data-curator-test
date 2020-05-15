@@ -18,32 +18,11 @@ Feature: About
 
   ![About panel user interface](https://raw.githubusercontent.com/ODIQueensland/data-curator/develop/static/img/ui/about.png)
 
-#  @dev
-  Scenario Outline: Show the About panel
+  Scenario: Show the About panel
     Given Data Curator is open
     When "About" is invoked
-    Then the "About Properties" panel should be displayed
-    And the major contributor: "<name>" with attribution statements and logo: "<logo>" should be displayed
-#    And the Application logo, name, and version should be shown
-    Examples:
-      | name                                        | logo                |
-      | Queensland Government                       | advance_qld_logo    |
-      | ODI Australian Network                      | odi_aus_logo        |
-      | Queensland Cyber Infrastructure Foundation  | qcif_logo           |
-      | Frictionless Data                           | frictionless-data   |
-
-  @dev
-  Scenario Outline: Click on the About panel sponsors's links
-    Given Data Curator is open
-    And "About" is invoked
-    When the logo: "<logo>" is clicked
-#    Then a call to open an external url, "<url>", should be made
-    Examples:
-      | logo                | url                         |
-      | advance_qld_logo    | http://advance.qld.gov.au/  |
-      | odi_aus_logo        | https://theodi.org.au/      |
-      | qcif_logo           | https://www.qcif.edu.au     |
-      | frictionless-data   | https://frictionlessdata.io |
+    Then the Major Contributor names, attribution statements, and logos with link to external websites should be shown
+    And the Application logo, name, and version should be shown
 
   Scenario: Close the About panel
     Given Data Curator is open
