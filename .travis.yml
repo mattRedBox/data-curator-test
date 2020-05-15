@@ -30,6 +30,8 @@ stages:
     if: branch IN (master) OR type IN (pull_request)
   - name: unittestandcoverage
     if: branch IN (ci) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/
+  - name: pretest
+    if: type IN (pull_request) OR (branch IN (ci, testci, master) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/)
   - name: test
     if: type IN (pull_request) OR (branch IN (ci, testci, master) AND commit_message !~ /^appveyor Updating branch from appveyor build.$/)
   - name: build
@@ -70,11 +72,21 @@ jobs:
     - os: linux
       script:
       - yarn run clean
-      - ./scripts/travis_headless_linux_unit_tests_script.sh
+      - yarn run unit
+    - stage: pretest
+      os: linux
+      script: yarn run clean && yarn run pack
     - stage: test
       os: linux
-      script:
-      - ./scripts/travis_headless_e2e_tests.sh test/features/file
+      script: yarn run cucumber:postpack:witharg -- test/features/backlog
+    - os: linux
+      script: yarn run cucumber:postpack:witharg -- test/features/data_curator
+    - os: linux
+      script: yarn run cucumber:postpack:witharg -- test/features/edit
+    - os: osx
+      script: yarn run cucumber:postpack:witharg -- test/features/file
+    - os: linux
+      script: yarn run cucumber:postpack:witharg -- test/features/file
     - stage: build
       os: osx
       script:
