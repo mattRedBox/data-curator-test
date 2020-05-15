@@ -73,20 +73,17 @@ jobs:
       script:
       - yarn run clean
       - yarn run unit
-    - stage: pretest
-      os: linux
-      script: yarn run clean && yarn run pack
     - stage: test
       os: linux
-      script: yarn run cucumber:postpack:witharg -- test/features/backlog
+      script: yarn run e2e  -- --tags @dev test/features/backlog
     - os: linux
-      script: yarn run cucumber:postpack:witharg -- test/features/data_curator
+      script: yarn run e2e  -- --tags @dev test/features/data_curator
     - os: linux
-      script: yarn run cucumber:postpack:witharg -- test/features/edit
+      script: yarn run e2e  -- --tags @dev test/features/edit
     - os: osx
-      script: yarn run cucumber:postpack:witharg -- test/features/file
+      script: yarn run e2e  -- --tags @dev test/features/file
     - os: linux
-      script: yarn run cucumber:postpack:witharg -- test/features/file
+      script: yarn run e2e  -- --tags @dev test/features/file
     - stage: build
       os: osx
       script:
