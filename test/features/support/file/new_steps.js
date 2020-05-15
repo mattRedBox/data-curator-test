@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import { Given, When, Then } from 'cucumber'
 import { defaultTabData, isDataEqualToDefaultData } from '../page-objects/io.js'
 import _ from 'lodash'
+import { activeTableSelector } from '../page-objects/selectors'
 
 When(/^Data Curator is open$/, async function () {
   const title = await this.app.client.waitUntilWindowLoaded().getTitle()
@@ -39,7 +40,7 @@ Given(/^the active table has data: "(.+)"$/, async function (data) {
 Then(/^1 window should be displayed/, function () {
   return this.app.client.waitUntilWindowLoaded()
     .getWindowCount()
-    .then(function(count) {
+    .then(function (count) {
       expect(count).to.equal(1)
     })
 })
@@ -48,7 +49,7 @@ Then(/^(the window (?:should have|has|have) (\d+) tab[s]?|(\d+) (?:data )tab[s]?
   return this.app.client
     .waitForVisible('#csvEditor')
     .elements('.tab-header')
-    .then(function(response) {
+    .then(function (response) {
       expect(response.value.length).to.equal(_.toInteger(numberOfTabs))
     })
 })
@@ -57,7 +58,7 @@ Then(/^the (?:new |)tab should be in the right-most position$/, function () {
   return this.app.client
     .waitForVisible('#csvEditor')
     .getAttribute('.tab-header', 'class')
-    .then(function(response) {
+    .then(function (response) {
       let lastTab = response.length - 1
       expect(response[lastTab]).to.contain('active')
     })
@@ -78,52 +79,38 @@ Then(/^the (?:new |)tab should have 1 table$/, function () {
   return this.app.client
     .waitForVisible('#csvEditor')
     .elements('.tab-content')
-    .then(function(response) {
+    .then(function (response) {
       expect(response.value.length).to.equal(1)
     })
     .elements('.active .editor.handsontable')
-    .then(function(response) {
+    .then(function (response) {
       expect(response.value.length).to.equal(1)
-    })
-})
-
-// the table should have {int} row by {int} columns
-Then(/^the (?:new |)table (?:should have |has )(\d+) row[s]? by (\d+) column[s]?$/, function (rowCount, colCount) {
-  return this.app.client.element('.active .editor.handsontable')
-    .elements('.ht_master table tr th')
-    .then(function(response) {
-      expect(response.value.length).to.deep.equal(rowCount)
-    })
-    .element('.ht_master table tr')
-    .elements('td')
-    .then(function(response) {
-      expect(response.value.length).to.deep.equal(colCount)
     })
 })
 
 Then(/^the (?:new |)table (?:should be|is) empty$/, function () {
   return this.app.client.element('.active .editor.handsontable')
     .getText('.ht_master table tr td')
-    .then(function(array) {
+    .then(function (array) {
       let text = array.join('')
       expect(text).to.equal('')
     })
 })
 
-Then(/^the cursor should be in the (?:new )table$/, function () {
+Then(/^the cursor (?:should be|is) in the (?:new )table$/, function () {
   return this.app.client.element('.active .editor.handsontable')
     .getAttribute('.ht_master table tr th', 'class')
-    .then(function(response) {
+    .then(function (response) {
       const selectedRowHeaderClass = 'ht__highlight'
       expect(response).to.contain(selectedRowHeaderClass)
     })
 })
 
-Then(/^the cursor should be in row (\d+), column (\d+)$/, function (rowNumber, colNumber) {
-  const parentSelector = '.tab-pane.active .editor.handsontable'
+Then(/^the cursor (?:should be|is) in row (\d+), column (\d+)$/, function (rowNumber, colNumber) {
+  const parentSelector = activeTableSelector
   return this.app.client.element(parentSelector)
     .getAttribute('.ht_master table tr th', 'class')
-    .then(function(response) {
+    .then(function (response) {
       const selectedRowHeaderClass = 'ht__highlight'
       // when only 1 value returned no longer an array
       if (_.isArray(response)) {
@@ -136,7 +123,7 @@ Then(/^the cursor should be in row (\d+), column (\d+)$/, function (rowNumber, c
     })
     .element(parentSelector)
     .getAttribute(`.ht_master table tr:nth-child(${rowNumber}) td`, 'class')
-    .then(function(response) {
+    .then(function (response) {
       const selectedCellClass = 'current highlight'
       // when only 1 value returned no longer an array
       if (_.isArray(response)) {

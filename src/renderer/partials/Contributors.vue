@@ -1,57 +1,66 @@
 <template>
   <div id="contributors">
     <div
-      v-for="(contributor,index) in getContributors"
-      :key="index"
-      class="contributor col-sm-12">
+      v-for="(contributor,gindex) in getContributors"
+      :key="gindex"
+      class="contributor col-sm-12"
+    >
       <div class="inputs-container">
         <div
-          v-for="(prop, index) in Object.keys(contributor)"
-          :key="prop + index"
-          class="input-group">
+          v-for="prop in Object.keys(contributor)"
+          :id="prop + gindex"
+          :key="prop + gindex"
+          class="input-group"
+        >
           <span class="input-group-addon input-sm">{{ prop }}</span>
           <select
             v-if="prop === 'role'"
-            :value="contributor[prop]"
             :id="prop"
+            :value="contributor[prop]"
             class="form-control input-sm"
-            @input="setContributorProp(index, prop, $event.target.value)" >
+            @input="setContributorProp(gindex, prop, $event.target.value)"
+          >
             <option
               v-for="role in roles"
               :key="role"
-              :value="role">
+              :value="role"
+            >
               {{ role }}
             </option>
           </select>
           <input
-            v-validate="contributorValidationRules(prop, index)"
             v-else
-            :class="{ 'form-control input-sm': true, 'validate-danger': errors.has(getValidationProp(prop) + index) }"
+            :id="prop + gindex"
+            v-validate="contributorValidationRules(prop, gindex)"
+            :class="{ 'form-control input-sm': true, 'validate-danger': errors.has(getValidationProp(prop) + gindex) }"
             :value="contributor[prop]"
-            :id="prop + index"
-            :name="getValidationProp(prop) + index"
+            :name="getValidationProp(prop) + gindex"
             type="text"
-            @input="setContributorProp(index, prop, $event.target.value)">
+            @input="setContributorProp(gindex, prop, $event.target.value)"
+          >
           <div
-            v-show="errors.has(getValidationProp(prop) + index)"
-            class="row help validate-danger">
-            {{ errors.first(getValidationProp(prop) + index) }}
+            v-show="errors.has(getValidationProp(prop) + gindex)"
+            class="row help validate-danger"
+          >
+            {{ errors.first(getValidationProp(prop) + gindex) }}
           </div>
         </div>
       </div>
       <button
         type="button"
         class="btn btn-danger btn-sm"
-        @click="removeContributor(index)">
-        <span class="glyphicon glyphicon-minus"/>
+        @click="removeContributor(gindex)"
+      >
+        <span class="glyphicon glyphicon-minus" />
       </button>
     </div>
     <div class="button-container">
       <button
         type="button"
         class="add-contributor btn btn-primary btn-sm"
-        @click="addContributor()">
-        <span class="glyphicon glyphicon-plus"/>Add contributor
+        @click="addContributor()"
+      >
+        <span class="glyphicon glyphicon-plus" />Add contributor
       </button>
     </div>
   </div>
@@ -73,88 +82,89 @@ export default {
   props: {
     setProperty: {
       type: Function,
-      default: function() {}
+      default: function () {}
     },
     getProperty: {
       type: Function,
-      default: function() {}
+      default: function () {}
     },
     getPropertyGivenHotId: {
       type: Function,
-      default: function() {}
+      default: function () {}
     },
     contributorsSetter: {
       type: Function,
       default: undefined
     }
   },
-  data() {
+  data () {
     return {
       contributors: []
     }
   },
   computed: {
     ...mapGetters(['getActiveTab']),
-    regexForPath() {
+    regexForPath () {
       // no ../ or nulls or absolute paths allowed
       return /^(([.](?![.])|[^/.:]+)+[/]*)+$/
     },
-    roles() {
+    roles () {
       return ['author', 'publisher', 'maintainer', 'wrangler', 'contributor']
     },
-    defaultRole() {
+    defaultRole () {
       return 'contributor'
     }
   },
   asyncComputed: {
     getContributors: {
-      async get() {
+      async get () {
         let contributors = this.getContributorsFromPackageProperties() || []
         for (const [index, contributor] of contributors.entries()) {
           if (contributor.role.trim() === '') {
             this.setProperty(`contributors[${index}]role`, this.defaultRole)
           }
         }
+        console.dir(contributors)
         return contributors
       },
-      watch() {
+      watch () {
         return this.contributors
       }
     }
   },
-  mounted: function() {
+  mounted: function () {
     this.initContributors()
   },
   methods: {
     ...mapMutations([
       'pushPackageProperty'
     ]),
-    getValidationProp: function(prop) {
+    getValidationProp: function (prop) {
       return prop === 'path' ? 'urlpath' : prop
     },
-    removeContributor: function(index) {
+    removeContributor: function (index) {
       let contributors = this.getProperty('contributors')
       contributors.splice(index, 1)
       this.setProperty('contributors', contributors)
       this.contributors = contributors
     },
-    addContributor: function() {
+    addContributor: function () {
       let contributors = this.getProperty('contributors') || []
       contributors.push(this.emptyContributor())
       this.setProperty('contributors', contributors)
       this.contributors = contributors
     },
-    emptyContributor: function() {
+    emptyContributor: function () {
       return { 'title': '', 'path': '', 'email': '', 'role': '', 'organization': '' }
     },
-    getContributorsFromPackageProperties: function() {
+    getContributorsFromPackageProperties: function () {
       let contributors = this.getProperty('contributors')
       return contributors
     },
-    initContributors: function() {
+    initContributors: function () {
       this.contributors = this.getContributorsFromPackageProperties()
     },
-    setContributorProp: function(index, prop, value) {
+    setContributorProp: function (index, prop, value) {
       if (typeof this.contributorsSetter !== 'undefined') {
         this.contributorsSetter(index, prop, value)
       } else {
@@ -163,7 +173,7 @@ export default {
       let contributors = this.getProperty('contributors') || []
       this.contributors = contributors
     },
-    contributorValidationRules: function(prop, index) {
+    contributorValidationRules: function (prop, index) {
       switch (prop) {
         case 'email':
           return 'email'

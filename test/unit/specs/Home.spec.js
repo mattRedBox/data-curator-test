@@ -9,20 +9,27 @@ import Vuex from 'vuex'
 import { globalStubWindows } from '../helpers/globalHelper.js'
 import { errorFeedback$ } from '@/rxSubject.js'
 import { ipcRenderer as ipc } from 'electron'
+import Vue from 'vue'
 
-describe('Home.vue', function() {
+describe('Home.vue', function () {
   let sandbox
   // dummmy test to begin with to incorporate vue/html with existing framework
-  describe('Toolbar menus', function() {
+  describe('Toolbar menus', function () {
     let wrapper
     let hot
-    beforeEach(function() {
+    beforeEach(function () {
       sandbox = sinon.createSandbox()
       Home.__Rewire__('getWindow', function (name) {
         return undefined
       })
       Home.__Rewire__('guessColumnProperties', function () {
         wrapper.setData({ messagesTitle: 'Guess success' })
+      })
+      Home.__Rewire__('getCurrentColumnIndexOrMin', function () {
+        return undefined
+      })
+      Home.__Rewire__('reselectHotCell', function () {
+        return undefined
       })
       const localVue = createLocalVue()
       localVue.use(Vuex)
@@ -40,18 +47,20 @@ describe('Home.vue', function() {
         'loadDataIntoLatestHot': sandbox.stub().withArgs().returns(hot.guid),
         'initHotTablePropertiesFromDescriptor': sandbox.stub(),
         'removePreviousHotComments': sandbox.stub(),
-        'createPackage': sandbox.stub().callsFake(function fakeFn() {
+        'createPackage': sandbox.stub().callsFake(function fakeFn () {
           wrapper.setData({ messagesTitle: 'Export success' })
         }),
-        'validateTable': sandbox.stub().callsFake(function fakeFn() {
+        'validateTable': sandbox.stub().callsFake(function fakeFn () {
           wrapper.setData({ messagesTitle: 'Validate success' })
         })
       })
     })
 
-    afterEach(function() {
+    afterEach(function () {
       Home.__ResetDependency__('getWindow')
       Home.__ResetDependency__('guessColumnProperties')
+      Home.__ResetDependency__('getCurrentColumnIndexOrMin')
+      Home.__ResetDependency__('reselectHotCell')
       wrapper.vm.$destroy()
       resetHot(sandbox)
       wrapper.destroy()
@@ -61,8 +70,9 @@ describe('Home.vue', function() {
     })
 
     toolbarMenus.forEach(menu => {
-      it(`should show the relevant active button and navigation panel when ${menu.name} button is clicked.`, function () {
+      it(`should show the relevant active button and navigation panel when ${menu.name} button is clicked.`, async () => {
         clickToolbarId(wrapper, menu.id)
+        await Vue.nextTick()
         let clickedMenuName = wrapper.vm.$el.querySelector('#toolbar li.active').textContent
         clickedMenuName = clickedMenuName
           ? clickedMenuName.trim()
@@ -86,22 +96,25 @@ describe('Home.vue', function() {
         }
       })
     })
-    it(`should have ${toolbarMenus.length} menus`, function() {
+    it(`should have ${toolbarMenus.length} menus`, function () {
       const toolbarNumber = wrapper.vm.$el.querySelectorAll('#toolbar li').length
       expect(toolbarNumber).to.equal(toolbarMenus.length)
     })
   })
 
-  describe('Hot comments', function() {
+  describe('Hot comments', function () {
     let wrapper
     let hot
-    beforeEach(function() {
+    beforeEach(function () {
       sandbox = sinon.createSandbox()
       Home.__Rewire__('getWindow', function (name, id) {
         return undefined
       })
       Home.__Rewire__('getCurrentColumnIndexOrMin', function () {
         return 0
+      })
+      Home.__Rewire__('reselectHotCell', function () {
+        return undefined
       })
       const localVue = createLocalVue()
       localVue.use(Vuex)
@@ -118,20 +131,21 @@ describe('Home.vue', function() {
       globalStubWindows(sandbox)
       wrapper.setData({ currentHotId: hot.guid, previousComments: [] })
       wrapper.setMethods({
-        'validateTable': sandbox.stub().callsFake(async function fakeFn() {
+        'validateTable': sandbox.stub().callsFake(async function fakeFn () {
           await wrapper.vm.validateTableCore()
         })
       })
     })
-    afterEach(function() {
+    afterEach(function () {
       Home.__ResetDependency__('getWindow')
       Home.__ResetDependency__('getCurrentColumnIndexOrMin')
       Home.__ResetDependency__('validateActiveDataAgainstSchema')
+      Home.__ResetDependency__('reselectHotCell')
       resetHot(sandbox)
       wrapper.destroy()
       wrapper = null
       hot = null
-      for (const listener of ['guessColumnProperties', 'importDataPackage', 'validateTable', 'showErrorCell', 'getErrorMessages', 'hoverToSelectErrorCell', 'exitHoverToSelectErrorCell', 'triggerMenuButton', 'toggleActiveHeaderRow', 'addTab', 'addTabWithData', 'addTabWithFormattedData', 'addTabWithFormattedDataAndDescriptor', 'addTabWithFormattedDataFile', 'showSidePanel', 'saveDataSuccess', 'resized', 'showProvenanceErrors', 'closeAndshowLoadingScreen', 'closeLoadingScreen', 'resetPackagePropertiesToObject']) {
+      for (const listener of ['guessColumnProperties', 'importDataPackage', 'validateTable', 'showErrorCell', 'getErrorMessages', 'hoverToSelectErrorCell', 'exitHoverToSelectErrorCell', 'triggerMenuButton', 'toggleActiveHeaderRow', 'addTab', 'addTabWithData', 'addTabWithFormattedData', 'addTabWithFormattedDataAndDescriptor', 'addTabWithFormattedDataFile', 'showSidePanel', 'saveDataSuccess', 'resized', 'showProvenanceErrors', 'closeAndshowLoadingScreen', 'closeLoadingScreen', 'resetPackagePropertiesToObject', 'importDataPackageFromFile', 'addSchemaToTabAndLock', 'okToCloseTab']) {
         ipc.removeAllListeners(listener)
       }
       sandbox.restore()
@@ -143,7 +157,7 @@ describe('Home.vue', function() {
         errorFeedback$.next(stubBasicErrorMessage1())
         callback()
       })
-      clickToolbarId(wrapper, 'validate-data')
+      await clickToolbarId(wrapper, 'validate-data')
       await flushPromises()
       const el = wrapper.vm.$el.querySelectorAll(`#csvContent .editor .ht_master table.htCore .htCommentCell`)
       expect(el.length).to.equal(1)
@@ -154,7 +168,7 @@ describe('Home.vue', function() {
       Home.__Rewire__('validateActiveDataAgainstSchema', function (callback) {
         callback()
       })
-      clickToolbarId(wrapper, 'validate-data')
+      await clickToolbarId(wrapper, 'validate-data')
       await flushPromises()
       const el = wrapper.vm.$el.querySelectorAll(`#csvContent .editor .ht_master table.htCore .htCommentCell`)
       expect(el.length).to.equal(0)
@@ -162,7 +176,7 @@ describe('Home.vue', function() {
   })
 })
 
-function stubBasicErrorMessage1() {
+function stubBasicErrorMessage1 () {
   return {
     rowNumber: 1,
     columnNumber: 1,
@@ -171,7 +185,7 @@ function stubBasicErrorMessage1() {
   }
 }
 
-function clickToolbarId(wrapper, id) {
+function clickToolbarId (wrapper, id) {
   const el = wrapper.findAll('#toolbar li').filter(w => {
     return w.contains(`#${id}`)
   })

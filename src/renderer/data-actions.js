@@ -5,6 +5,7 @@ import { includeHeadersInData } from '@/frictionlessUtilities.js'
 import { toggleHeaderNoFeedback } from '@/headerRow.js'
 import { pushCsvFormat } from '@/dialect.js'
 import detectNewline from 'detect-newline'
+import os from 'os'
 
 var parse = require('csv-parse/lib/sync')
 var stringify = require('csv-stringify/lib/sync')
@@ -32,14 +33,17 @@ export function loadCsvDataIntoHot (hot, data, format) {
   let arrays
   // if no format specified, default to csv
   if (typeof format === 'undefined' || !format) {
-    detectAndStoreQuoteChar(data, { rowDelimiter: '\n' }, hot.guid)
+    detectAndStoreQuoteChar(data, hot.guid, null)
+    captureBOM(data, hot.guid)
     arrays = parse(data)
   } else {
     let csvOptions = dialectToCsvOptions(format.dialect)
-    detectAndStoreQuoteChar(data, csvOptions, hot.guid)
+    detectAndStoreQuoteChar(data, hot.guid, csvOptions)
     // let csv parser handle the line terminators
     _.unset(csvOptions, 'rowDelimiter')
     // TODO: update to stream
+    csvOptions.bom = false
+    captureBOM(data, hot.guid)
     arrays = parse(data, csvOptions)
     pushCsvFormat(hot.guid, format)
   }
@@ -48,6 +52,12 @@ export function loadCsvDataIntoHot (hot, data, format) {
   hot.render()
   // frictionless csv header default = true
   toggleHeaderNoFeedback(hot)
+}
+
+function captureBOM (data, hotId) {
+  if (data.charCodeAt(0) === 0xFEFF) {
+    store.commit('pushTableProperty', { hotId: hotId, key: `bom`, value: 0xFEFF })
+  }
 }
 
 export function loadArrayDataIntoHot (hot, arrays, format) {
@@ -95,7 +105,14 @@ export function saveDataToFile (hot, format, filename, callback) {
     data = stringify(arrays, csvOptions)
     pushCsvFormat(hot.guid, format)
   }
+  reinsertExistingBOM(data, hot.guid)
   fs.writeFile(filename, data, callback)
+}
+
+function reinsertExistingBOM (data, hotId) {
+  if (data.charCodeAt(0) !== 0xFEFF && store.getters.getTableProperty({ key: 'bom', hotId: hotId })) {
+    data = String.fromCodePoint(0xFEFF) + data
+  }
 }
 
 function dialectToCsvOptions (dialect) {
@@ -110,11 +127,11 @@ function dialectToCsvOptions (dialect) {
   return csvOptions
 }
 
-function detectAndStoreQuoteChar (data, csvOptions, hotId) {
+function detectAndStoreQuoteChar (data, hotId, csvOptions) {
   let sample = _.truncate(data, { length: 2000 })
   var sniffer = new CSVSniffer()
   // csv-sniffer will throw exception if there is no line terminator in sample
-  let newLineString = detectNewline(sample) || csvOptions.rowDelimiter
+  let newLineString = detectNewline(sample) || _.get(csvOptions, 'rowDelimiter', os.EOL)
   var sniffResult = sniffer.sniff(sample, { newlineStr: newLineString })
   if (sniffResult.quoteChar) {
     store.commit('pushTableProperty', { hotId: hotId, key: `sampledQuoteChar`, value: sniffResult.quoteChar })

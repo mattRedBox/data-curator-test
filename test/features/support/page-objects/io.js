@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import fs from 'fs-extra'
 import os from 'os'
+import { applyFnToDualSelectors, applyFnToSelectorWithLabel } from './selectors'
 
 export function getFilePathFromFixtures (fileName) {
   const filePath = require('path').join(__dirname, `../../../fixtures/${fileName}`)
@@ -34,6 +35,29 @@ export function arrayOfLinesToString (arrayOfLines) {
   return _.reduce(JSON.parse(arrayOfLines), function (result, next) {
     return result.concat(`${next}\n`)
   }, '')
+}
+
+export async function enterInputInFieldName (app, value, field, timeout) {
+  const result = await applyFnToIdOrClassSelector(app, 'click', field, 'input', timeout)
+  await app.client.keys(value)
+  await app.client.pause(timeout)
+  return result
+}
+
+export async function clickInputFieldName (app, field, timeout) {
+  const result = await applyFnToIdOrClassSelector(app, 'click', field, 'input', timeout)
+  return result
+}
+
+export async function applyFnToIdOrClassSelector (app, fn, fieldIdOrClass, selector, timeout) {
+  try {
+    const result = await applyFnToSelectorWithLabel(app, fn, `${selector}.${fieldIdOrClass}`, fieldIdOrClass, timeout)
+    return result
+  } catch (error) {
+    console.log(`Unable to find via class. Trying id`)
+    const result = await applyFnToSelectorWithLabel(app, fn, `${selector}#${fieldIdOrClass}`, fieldIdOrClass, timeout)
+    return result
+  }
 }
 
 export {

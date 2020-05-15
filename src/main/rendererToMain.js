@@ -1,4 +1,4 @@
-import { ipcMain as ipc, dialog } from 'electron'
+import { ipcMain as ipc, dialog, Menu } from 'electron'
 import { showErrors } from './errors.js'
 import {
   getMenu,
@@ -6,10 +6,11 @@ import {
   clickLabelsOnMenu,
   disableAllSubMenuItemsFromMenuObject,
   enableSubMenuItemsFromMenuObject,
-  enableAllSubMenuItemsFromMenuLabel
+  enableAllSubMenuItemsFromMenuLabel,
+  disableEnableBasedOnAttributeAndConditionFromLabels
 } from './menuUtils.js'
 import { focusMainWindow, closeSecondaryWindow } from './windows.js'
-import { loadPackageJson, loadResourceDataFromPackageUrl } from './url.js'
+import { loadPackageJson, loadResourceDataFromPackageSource } from './loadFrictionless'
 
 ipc.on('toggleSaveMenu', (event, arg) => {
   let saveSubMenu = getSubMenuFromMenu('File', 'Save')
@@ -25,6 +26,13 @@ ipc.on('hasCaseSensitiveHeader', (event, arg) => {
 ipc.on('hasHeaderRow', (event, arg) => {
   let subMenu = getSubMenuFromMenu('Tools', 'Header Row')
   subMenu.checked = arg
+})
+
+ipc.on('hasLockedActiveTable', (event, arg) => {
+  let lockedSubMenu = getSubMenuFromMenu('Tools', 'Lock Table Schema')
+  lockedSubMenu.checked = arg
+  // for locked table (ie: lock is enabled), value is true, so any menu 'enabled': set to false
+  disableEnableBasedOnAttributeAndConditionFromLabels(['Edit', 'Tools'], 'lockable', !arg)
 })
 
 ipc.on('showErrorsWindow', (event, arg) => {
@@ -60,7 +68,7 @@ ipc.on('openedFindReplace', (event, arg) => {
   enableAllSubMenuItemsFromMenuLabel('Find')
 })
 
-ipc.on('loadPackageUrl', async function(event, index, hotId, url) {
+ipc.on('loadPackageUrl', async function (event, index, hotId, url) {
   const mainWindow = focusMainWindow()
   const dataPackage = await loadPackageJson(url)
   if (dataPackage) {
@@ -68,9 +76,9 @@ ipc.on('loadPackageUrl', async function(event, index, hotId, url) {
   }
 })
 
-ipc.on('loadPackageUrlResourcesAsFkRelations', async function(event, url, resourceName) {
+ipc.on('loadPackageUrlResourcesAsFkRelations', async function (event, url, resourceName) {
   try {
-    const rows = await loadResourceDataFromPackageUrl(url, resourceName)
+    const rows = await loadResourceDataFromPackageSource(url, resourceName)
     event.returnValue = rows
   } catch (error) {
     const errorMessage = 'There was a problem collating data from url resources'

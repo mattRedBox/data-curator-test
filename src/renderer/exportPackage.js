@@ -7,7 +7,7 @@ import { compileAndStringifyProvenance } from '@/provenance.js'
 // import os from 'os'
 const Dialog = remote.dialog
 
-export function createZipFile(text) {
+export function createZipFile (text) {
   let json = JSON.stringify(text, null, 4)
   Dialog.showSaveDialog({
     filters: [
@@ -16,7 +16,7 @@ export function createZipFile(text) {
         extensions: ['zip']
       }
     ]
-  }, function(filename) {
+  }, function (filename) {
     if (filename === undefined) {
       return
     }
@@ -24,7 +24,7 @@ export function createZipFile(text) {
   })
 }
 
-function generateDataPackage(filename, json) {
+export function generateDataPackage (filename, json) {
   let output = fs.createWriteStream(filename)
   let archive = archiver('zip', {
     zlib: {
@@ -32,18 +32,18 @@ function generateDataPackage(filename, json) {
     } // Sets the compression level.
   })
   output.on('close', () => {
-    // console.log(archive.pointer() + ' total bytes')
+    console.log(archive.pointer() + 'total bytes')
   }).on('end', () => {
-    // console.log('Data has been drained')
+    console.log('Data has been drained')
   })
-  archive.on('warning', function(err) {
+  archive.on('warning', function (err) {
     if (err.code === 'ENOENT') {
       // log warning
     } else {
       // throw error
       throw err
     }
-  }).on('error', function(err) {
+  }).on('error', function (err) {
     throw err
   })
   archive.pipe(output)
@@ -51,19 +51,22 @@ function generateDataPackage(filename, json) {
   zipResources(archive)
   zipProvenanceProperties(archive)
   archive.finalize()
+  return output
 }
 
-function zipJson(archive, json) {
+function zipJson (archive, json) {
   archive.append(json, { name: 'datapackage.json' })
 }
 
-function zipResources(archive) {
+function zipResources (archive) {
+  console.log('store is:')
+  console.dir(store.getters.getTabFilenames)
   for (let filename of store.getters.getTabFilenames) {
     let name = path.basename(filename)
     archive.append(fs.createReadStream(filename), { name: name, prefix: 'data' })
   }
 }
 
-function zipProvenanceProperties(archive) {
+function zipProvenanceProperties (archive) {
   archive.append(compileAndStringifyProvenance(), { name: 'README.md' })
 }

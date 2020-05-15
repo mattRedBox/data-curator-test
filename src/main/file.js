@@ -1,15 +1,16 @@
 import { dialog as Dialog, ipcMain as ipc } from 'electron'
 import Fs from 'fs'
-import { createWindowTabWithFormattedDataFile, focusMainWindow } from './windows'
+import { createMainWindow, createWindowTabWithFormattedDataFile, focusMainWindow } from './windows'
 import _ from 'lodash'
 import { disableOpenFileItems, enableOpenFileItems } from './menuUtils.js'
+import { loadResourceSchemaFromJson } from './loadFrictionless'
 
-export function saveFileAs(format) {
+export function saveFileAs (format) {
   let currentWindow = focusMainWindow()
   Dialog.showSaveDialog({
     filters: format.filters,
     defaultPath: global.tab.activeTitle
-  }, function(filename) {
+  }, function (filename) {
     if (filename === undefined) {
       return
     }
@@ -19,7 +20,7 @@ export function saveFileAs(format) {
         // title is not displayed on screen on macOS
         title: 'Data not saved',
         message:
-`The data was not saved to the file.
+          `The data was not saved to the file.
 You selected a file name that is already used in this Data Package.
 To save the data, choose a unique file name.`
       })
@@ -31,19 +32,19 @@ To save the data, choose a unique file name.`
   })
 }
 
-function savedFilenameExists(filename) {
+function savedFilenameExists (filename) {
   let threshold = global.tab.activeFilename === filename ? 1 : 0
   let length = global.tab.filenames.length
   let filtered = _.without(global.tab.filenames, filename)
   return length - filtered.length > threshold
 }
 
-export function saveFile() {
+export function saveFile () {
   let currentWindow = focusMainWindow()
   currentWindow.webContents.send('saveData', currentWindow.format, global.tab.activeFilename)
 }
 
-export function importDataPackage() {
+export function importDataPackageFromFile () {
   disableOpenFileItems()
   let window = focusMainWindow()
   Dialog.showOpenDialog({
@@ -54,7 +55,7 @@ export function importDataPackage() {
       }
     ],
     properties: ['openFile']
-  }, function(filename) {
+  }, function (filename) {
     enableOpenFileItems()
     if (filename === undefined) {
       return
@@ -62,15 +63,36 @@ export function importDataPackage() {
     if (_.isArray(filename)) {
       filename = filename[0]
     }
-    window.webContents.send('importDataPackage', filename)
+    window.webContents.send('importDataPackageFromFile', filename)
   })
 }
 
-export function openFile(format) {
+export function importTableResourceSchemaFromFile () {
+  let window = focusMainWindow()
+  Dialog.showOpenDialog({
+    filters: [
+      {
+        name: '*',
+        extensions: ['json']
+      }
+    ],
+    properties: ['openFile']
+  }, function (filename) {
+    if (filename === undefined) {
+      return
+    }
+    if (_.isArray(filename)) {
+      filename = filename[0]
+    }
+    loadResourceSchemaFromJson(filename)
+  })
+}
+
+export function openFile (format) {
   disableOpenFileItems()
   Dialog.showOpenDialog({
     filters: format.filters
-  }, function(filenames) {
+  }, function (filenames) {
     enableOpenFileItems()
     if (process.env.BABEL_ENV === 'test') {
       global.openFileDialogReturned = filenames
@@ -86,12 +108,25 @@ ipc.on('openFileIntoTab', (event, arg1, arg2) => {
   readFile(arg1, arg2)
 })
 
-export function readFile(filename, format) {
+export function createWindowTabFromFilename (filename) {
+  let mainWindow = focusMainWindow()
+  if (!mainWindow) {
+    mainWindow = createMainWindow()
+    mainWindow.webContents.on('did-finish-load', function () {
+      readFile(filename)
+    })
+  } else {
+    readFile(filename)
+  }
+  return mainWindow
+}
+
+export function readFile (filename, format) {
   if (openedFilenameExists(filename)) {
     showAlreadyOpenedFileDialog()
     return
   }
-  Fs.readFile(filename, 'utf-8', function(err, data) {
+  Fs.readFile(filename, 'utf-8', function (err, data) {
     if (err) {
       console.error(err)
     } else {
@@ -102,7 +137,7 @@ export function readFile(filename, format) {
 }
 
 // TODO: consider toggle global var and use with debounce to check when last dialog triggered so don't get too many dialogs for multiple file opens
-function showAlreadyOpenedFileDialog() {
+function showAlreadyOpenedFileDialog () {
   Dialog.showMessageBox(focusMainWindow(), {
     type: 'warning',
     // title is not displayed on screen on macOS
@@ -113,6 +148,6 @@ function showAlreadyOpenedFileDialog() {
   })
 }
 
-function openedFilenameExists(filename) {
+function openedFilenameExists (filename) {
   return _.indexOf(global.tab.filenames, filename) > -1
 }

@@ -10,25 +10,25 @@ let hotIdFromTab$ = new Subject()
 let allTabsTitles$ = new Subject()
 let provenanceErrors$ = new ReplaySubject(1)
 let currentPos$ = new Subject()
-let afterSetDataAtCell$ = new Subject()
 let fkPackagesButtonText$ = new Subject()
 let loadingPackage$ = new Subject()
 const errorFeedback$ = new Subject()
 const updateHotDimensions$ = new Subject()
+const allTableLocks$ = new Subject()
 
-export function onNextHotIdFromTabRx(asyncFunction) {
+export function onNextHotIdFromTabRx (asyncFunction) {
   let subject = hotIdFromTab$
   onNextTabRx(subject, asyncFunction)
 }
 
-export function onNextTabRx(subject, asyncFunction) {
-  activeTab$.subscribe(function(activeTab) {
+export function onNextTabRx (subject, asyncFunction) {
+  activeTab$.subscribe(function (activeTab) {
     onNextSubjectFromPromise(subject, asyncFunction(activeTab))
   })
 }
 
-export function onNextSubjectFromPromise(subject, promise) {
-  Observable.fromPromise(promise).subscribe(function(value) {
+export function onNextSubjectFromPromise (subject, promise) {
+  Observable.fromPromise(promise).subscribe(function (value) {
     subject.next(value)
   })
 }
@@ -41,9 +41,9 @@ export {
   allTabsTitles$,
   provenanceErrors$,
   currentPos$,
-  afterSetDataAtCell$,
   fkPackagesButtonText$,
   loadingPackage$,
   errorFeedback$,
-  updateHotDimensions$
+  updateHotDimensions$,
+  allTableLocks$
 }

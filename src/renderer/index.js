@@ -1,4 +1,13 @@
-import { HotRegister, insertRowAbove, insertRowBelow, insertColumnLeft, insertColumnRight, removeRows, removeColumns } from '@/hot.js'
+import {
+  HotRegister,
+  insertColumnAfter,
+  insertColumnBefore,
+  insertRowAbove,
+  insertRowBelow,
+  removeColumns,
+  removeRows,
+  reselectHotCellFromHot
+} from '@/hot.js'
 import { loadDataIntoHot, saveDataToFile } from '@/data-actions.js'
 import { ipcRenderer as ipc, remote } from 'electron'
 import { isCaseSensitive } from '@/frictionlessUtilities'
@@ -8,18 +17,18 @@ import { fileFormats } from '@/file-formats.js'
 import fs from 'fs-extra'
 import store from '@/store'
 
-export function addHotContainerListeners(container, loadingFn, closeLoadingFn) {
-  container.ondragover = function() {
+export function addHotContainerListeners (container, loadingFn, closeLoadingFn) {
+  container.ondragover = function () {
     return false
   }
-  container.ondragleave = container.ondragend = function() {
+  container.ondragleave = container.ondragend = function () {
     return false
   }
-  container.ondrop = function(e) {
+  container.ondrop = function (e) {
     e.preventDefault()
     var f = e.dataTransfer.files[0]
     loadingFn('Loading data. Please wait...')
-    fs.readFile(f.path, 'utf-8', function(err, data) {
+    fs.readFile(f.path, 'utf-8', function (err, data) {
       if (err) {
         console.error(err)
       } else {
@@ -32,13 +41,13 @@ export function addHotContainerListeners(container, loadingFn, closeLoadingFn) {
     })
   }
 
-  container.addEventListener('contextmenu', function(e) {
+  container.addEventListener('contextmenu', function (e) {
     e.preventDefault()
     menu.popup(getWindow('home'), { async: true })
   }, false)
 }
 
-export function getWindow(name, id) {
+export function getWindow (name, id) {
   let browserWindow
   let windowId = id || remote.getGlobal('windows')[name]
   if (windowId) {
@@ -47,7 +56,7 @@ export function getWindow(name, id) {
   return browserWindow
 }
 
-export function loadData(key, data, format, closeLoadingFn) {
+export function loadData (key, data, format, closeLoadingFn) {
   let hot = HotRegister.getInstance(key)
   try {
     loadDataIntoHot(hot, data, format)
@@ -58,19 +67,15 @@ export function loadData(key, data, format, closeLoadingFn) {
   }
 }
 
-ipc.on('saveData', function(e, format, fileName) {
+ipc.on('saveData', function (e, format, fileName) {
   let hot = HotRegister.getActiveInstance()
   // ensure that cell (and its row) holding cursor is committed
   hot.deselectCell()
   saveDataToFile(hot, format, fileName)
-  let selection = store.getters.getHotSelection(hot.guid)
-  // reselect cell after save
-  if (selection) {
-    hot.selectCell(selection[0], selection[1], selection[2], selection[3])
-  }
+  reselectHotCellFromHot(hot)
 })
 
-ipc.on('editUndo', function() {
+ipc.on('editUndo', function () {
   let hot = HotRegister.getActiveInstance()
   if (hot.isUndoAvailable) {
     hot.undo()
@@ -79,7 +84,7 @@ ipc.on('editUndo', function() {
   }
 })
 
-ipc.on('editRedo', function() {
+ipc.on('editRedo', function () {
   let hot = HotRegister.getActiveInstance()
   if (hot.isRedoAvailable) {
     hot.redo()
@@ -88,60 +93,60 @@ ipc.on('editRedo', function() {
   }
 })
 
-ipc.on('editSelectAll', function() {
+ipc.on('editSelectAll', function () {
   let hot = HotRegister.getActiveInstance()
   hot.selectCell(0, 0, (hot.countRows() - 1), (hot.countCols() - 1))
 })
 
-ipc.on('insertRowAbove', function() {
+ipc.on('insertRowAbove', function () {
   insertRowAbove()
 })
 
-ipc.on('insertRowBelow', function() {
+ipc.on('insertRowBelow', function () {
   insertRowBelow()
 })
 
-ipc.on('clickLabelOnContextMenu', function(event, arg) {
+ipc.on('clickLabelOnContextMenu', function (event, arg) {
   menu.items.find(x => x.label === arg).click()
 })
 
-ipc.on('closeContextMenu', function() {
+ipc.on('closeContextMenu', function () {
   menu.closePopUp(getWindow('home'))
 })
 
-ipc.on('insertColumnLeft', function() {
-  insertColumnLeft()
+ipc.on('insertColumnBefore', function () {
+  insertColumnBefore()
 })
 
-ipc.on('insertColumnRight', function() {
-  insertColumnRight()
+ipc.on('insertColumnAfter', function () {
+  insertColumnAfter()
 })
 
-ipc.on('removeRows', function() {
+ipc.on('removeRows', function () {
   removeRows()
 })
 
-ipc.on('removeColumns', function() {
+ipc.on('removeColumns', function () {
   removeColumns()
 })
 
-ipc.on('toggleCaseSensitiveHeader', function() {
+ipc.on('toggleCaseSensitiveHeader', function () {
   let hotId = HotRegister.getActiveInstance().guid
   const toggledCase = !isCaseSensitive(hotId)
   pushCsvDialect(hotId, { caseSensitiveHeader: toggledCase })
   ipc.send('hasCaseSensitiveHeader', toggledCase)
 })
 
-export function closeSecondaryWindow(windowName) {
+export function closeSecondaryWindow (windowName) {
   ipc.sendSync('closeSecondaryWindow', windowName)
 }
 
-ipc.on('loadDataIntoCurrentHot', function(event, stringified) {
+ipc.on('loadDataIntoCurrentHot', function (event, stringified) {
   loadDataIntoCurrentHot(JSON.parse(stringified))
 })
 
 // convenience method for testing
-function loadDataIntoCurrentHot(data) {
+function loadDataIntoCurrentHot (data) {
   const hot = HotRegister.getActiveInstance()
   loadDataIntoHot(hot, data)
   return hot

@@ -6,17 +6,28 @@ export function getMenu (menuLabel) {
   return menu
 }
 
-export function enableAllFromLabels(menuLabel, subMenuLabels) {
+export function enableAllFromLabels (menuLabel, subMenuLabels) {
   enableAllSubMenuItemsFromMenuLabel(menuLabel)
   for (const label of subMenuLabels) {
     enableAllSubMenuItemsFromMenuObject(getSubMenuFromMenu(menuLabel, label))
   }
 }
 
-export function disableAllFromLabels(menuLabel, subMenuLabels) {
+export function disableAllFromLabels (menuLabel, subMenuLabels) {
   disableAllSubMenuItemsFromMenuLabel(menuLabel)
   for (const label of subMenuLabels) {
     disableAllSubMenuItemsFromMenuObject(getSubMenuFromMenu(menuLabel, label))
+  }
+}
+
+export function disableEnableBasedOnAttributeAndConditionFromLabels (menuLabels, attribute, condition) {
+  for (const nextLabel of menuLabels) {
+    let menu = getMenu(nextLabel)
+    menu.submenu.items.forEach(function (x) {
+      if (typeof x.label !== 'undefined' && x[attribute]) {
+        x.enabled = condition
+      }
+    })
   }
 }
 
@@ -44,11 +55,11 @@ export function disableAllSubMenuItemsFromMenuObject (menu) {
   })
 }
 
-export function disableMenuItem(menu) {
+export function disableMenuItem (menu) {
   menu.enabled = false
 }
 
-export function enableMenuItem(menu) {
+export function enableMenuItem (menu) {
   menu.enabled = true
 }
 
@@ -58,15 +69,23 @@ export function getSubMenuLabelsFromMenu (menuLabel) {
   return subMenuLabels
 }
 
-export function disableOpenFileItems() {
-  applyFnsToLabelsFromMenuLabel('File', ['Open Excel Sheet...', 'Open', 'Open Data Package'], disableAllSubMenuItemsFromMenuObject, disableMenuItem)
+export function disableOpenFileItems () {
+  disableMenuItems('File', ['Open Excel Sheet...', 'Open', 'Open Data Package', 'Import Column Properties'])
 }
 
-export function enableOpenFileItems() {
-  applyFnsToLabelsFromMenuLabel('File', ['Open Excel Sheet...', 'Open', 'Open Data Package'], enableAllSubMenuItemsFromMenuObject, enableMenuItem)
+export function disableMenuItems (menuLabel, subMenuLabels) {
+  applyFnsToLabelsFromMenuLabel(menuLabel, subMenuLabels, disableAllSubMenuItemsFromMenuObject, disableMenuItem)
 }
 
-export function applyFnsToLabelsFromMenuLabel(menuLabel, labels, subMenuFn, menuItemFn) {
+export function enableOpenFileItems () {
+  enableMenuItems('File', ['Open Excel Sheet...', 'Open', 'Open Data Package', 'Import Column Properties'])
+}
+
+export function enableMenuItems (menuLabel, subMenuLabels) {
+  applyFnsToLabelsFromMenuLabel(menuLabel, subMenuLabels, enableAllSubMenuItemsFromMenuObject, enableMenuItem)
+}
+
+export function applyFnsToLabelsFromMenuLabel (menuLabel, labels, subMenuFn, menuItemFn) {
   const menu = getMenu(menuLabel)
   for (const next of menu.submenu.items) {
     if (_.indexOf(labels, next.label) > -1) {
@@ -103,7 +122,7 @@ export function getSubMenusAndItemsFromMenu (menu) {
         // console.log(`skipping `, next.type)
     }
   }
-  return { subMenusOnly, menuItemsOnly }
+  return [ subMenusOnly, menuItemsOnly ]
 }
 
 export function getSubMenuFromMenu (menuLabel, subMenuLabel) {

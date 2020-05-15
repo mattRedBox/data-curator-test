@@ -46,11 +46,6 @@ for:
   build_script:
     - ps: if ($env:APPVEYOR_REPO_TAG -eq "true") { yarn run release:predraft }
   configuration: Release
-  deploy:
-    provider: Environment
-    name: production
-    on:
-      appveyor_repo_tag: true
 -
   branches:
     only:
@@ -82,9 +77,8 @@ for:
   configuration: Mergeandtest
 -
   branches:
-    except:
-      - develop
-      - ci
+    only:
+      - master
   test_script:
     - yarn run clean
     - yarn run unit

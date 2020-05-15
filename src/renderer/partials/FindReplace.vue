@@ -1,75 +1,100 @@
 <template>
   <form
     id="findAndReplace"
-    class="navbar-form form-horizontal">
+    class="navbar-form form-horizontal"
+  >
     <div class="form-group-sm row container-fluid">
       <div
         v-for="(formprop, index) in formprops"
         :key="index"
-        class="propertyrow clearfix">
+        class="propertyrow clearfix"
+      >
         <label
-          v-tooltip.left="tooltip(formprop.tooltipId)"
           v-show="formprop.label"
+          v-tooltip.left="tooltip(formprop.tooltipId)"
           :for="formprop.label"
-          class="control-label pull-left">{{ formprop.label }}</label>
+          class="control-label pull-left"
+        >{{ formprop.label }}</label>
         <div class="inputrow clearfix">
           <div
             :class="formprop.key"
             :data-placeholder="formprop.resultFn(formprop.key)"
-            class="placeholder text-muted small">
+            class="placeholder text-muted small"
+          >
             <input
               :id="formprop.key"
               :value="getText(formprop.key)"
               :name="formprop.key"
               class="pull-left form-control input-sm col-sm-9"
               type="text"
-              @input="setText(formprop.key, $event.target.value)" >
+              @input="setText(formprop.key, $event.target.value)"
+            >
             <span
               v-show="formprop.resultFn(formprop.key)"
               :class="formprop.resultIconFn()"
-              class="glyphicon form-control-feedback"/>
+              class="glyphicon form-control-feedback"
+            />
           </div>
           <span class="btn-group pull-right">
             <button
-              :class="formprop.buttonTypeClass || 'btn-primary'"
+              class="btn btn-sm previous btn-primary"
               type="button"
-              class="btn btn-sm"
-              @click="formprop.fn('previous')">
+              @click="formprop.fn('previous')"
+            >
               <span
                 v-if="formprop.buttonLeftClass"
-                :class="formprop.buttonLeftClass"/>
+                :class="formprop.buttonLeftClass"
+              />
               <template v-if="formprop.buttonLeftText">
                 {{ formprop.buttonLeftText }}
               </template>
             </button>
             <button
               v-show="formprop.buttonRightClass"
-              :class="formprop.buttonTypeClass || 'btn-primary'"
+              class="btn btn-sm next btn-primary"
               type="button"
-              class="btn btn-sm"
-              @click="formprop.fn('next')">
-              <span :class="formprop.buttonRightClass"/>
+              @click="formprop.fn('next')"
+            >
+              <span :class="formprop.buttonRightClass" />
             </button>
           </span>
         </div>
         <div
           v-if="formprop.buttonBelowText"
-          class="btn-group pull-right">
-          <button
-            :class="formprop.buttonTypeClass || 'btn-primary'"
-            type="button"
-            class="button-below btn btn-sm"
-            @click="formprop.belowFn('next')">
-            <span :class="formprop.buttonBelowClass">{{ formprop.buttonBelowText }}</span>
-          </button>
+          class="bottom-line"
+        >
+          <div class="input-group row checkbox input-sm">
+            <input
+              id="case-sensitive"
+              v-model="isCaseSensitive"
+              type="checkbox"
+            >
+            <label
+              id="case-sensitive-label"
+              for="case-sensitive"
+            >case sensitive</label>
+          </div>
+          <div
+            v-if="formprop.buttonBelowText"
+            class="btn-group pull-right"
+          >
+            <button
+              :class="formprop.buttonTypeClass || 'btn-primary'"
+              type="button"
+              class="button-below btn btn-sm"
+              @click="formprop.belowFn('next')"
+            >
+              <span :class="formprop.buttonBelowClass">{{ formprop.buttonBelowText }}</span>
+            </button>
+          </div>
         </div>
       </div>
-    <!-- <div class="pickrow">
-      <span v-for="(radioprop, index) in radioprops">
-        <input type="radio" :id="radioprop.key" :value="radioprop.value" v-model="findTypePicked">
-        <label for="find-in-column">{{radioprop.label}}</label>
-      </span>
-    </div> -->
+      <!-- <div class="pickrow">
+                    <span v-for="(radioprop, index) in radioprops">
+                      <input type="radio" :id="radioprop.key" :value="radioprop.value" v-model="findTypePicked">
+                      <label for="find-in-column">{{radioprop.label}}</label>
+                    </span>
+                  </div> -->
     </div>
   </form>
 </template>
@@ -81,7 +106,7 @@ import SideNav from './SideNav'
 import Vue from 'vue'
 import AsyncComputed from 'vue-async-computed'
 import {
-  HotRegister
+  HotRegister, reselectHotCellFromHot
 } from '../hot.js'
 import VueRx from 'vue-rx'
 import {
@@ -93,6 +118,8 @@ import {
 } from '@/rxSubject.js'
 import Sifter from 'sifter/sifter.min.js'
 import { ipcRenderer as ipc } from 'electron'
+import { captureLatestEdit } from '@/hot.js'
+
 Vue.use(AsyncComputed)
 Vue.use(VueRx, {
   Subscription
@@ -101,11 +128,16 @@ Vue.use(VueRx, {
 let _lastRowIndicies = []
 let _currentHotPos = [-1, -1]
 let _previousSearchClear = true
+let _findTextValue = ''
+let _isCaseSensitive = true
+
+// TODO: consider removing dependence on handsontable, for faster search by implementing own beforeRenderer to trigger on find results
 // cannot access DEFAULT anymore - must copy (https://docs.handsontable.com/3.0.0/demo-searching.html#page-custom-callback)
-const _defaultCallback = function(instance, row, col, data, testResult) {
-  instance.getCellMeta(row, col).isSearchResult = testResult
+const _defaultCallback = function (instance, row, col, data, testResult) {
+  let callbackQuery = _isCaseSensitive ? testResult && _.includes(data, _findTextValue) : testResult
+  instance.getCellMeta(row, col).isSearchResult = callbackQuery
 }
-const _searchCallback = function(instance, row, col, value, result) {
+const _searchCallback = function (instance, row, col, value, result) {
   // const defaultCallback = instance.getCallback()
   if (!_previousSearchClear && _.indexOf(_lastRowIndicies, row) > -1) {
     _defaultCallback.apply(this, arguments)
@@ -116,10 +148,9 @@ const _searchCallback = function(instance, row, col, value, result) {
 
 export default {
   name: 'FindReplace',
-  components: {
-  },
+  components: {},
   extends: SideNav,
-  data() {
+  data () {
     return {
       activeHotId: null,
       findTypePicked: 'findInColumn',
@@ -140,6 +171,7 @@ export default {
       hotParameters: {
         callback: _searchCallback
       },
+      isCaseSensitive: true,
       formprops: [{
         label: 'Find in column',
         key: 'find',
@@ -175,34 +207,42 @@ export default {
   computed: {
     ...mapGetters(['getHotSelection'])
   },
-  mounted: async function() {
+  watch: {
+    'isCaseSensitive': function (result) {
+      _isCaseSensitive = result
+      this.resetAfterUserInput()
+    }
+  },
+  mounted: async function () {
     this.activeHotId = await this.currentHotId()
     const vueUpdateActiveHotId = this.updateActiveHotId
     const vueResetOnColumnChange = this.resetOnColumnChange
     const vueResetSearchResult = this.resetSearchResultWrapper
     const vueResetRowIndex = this.resetRowIndex
-    this.$subscribeTo(hotIdFromTab$, function(hotId) {
+    this.$subscribeTo(hotIdFromTab$, function (hotId) {
       vueUpdateActiveHotId(hotId)
       vueResetSearchResult()
     })
-    this.$subscribeTo(currentPos$, function(currentPos) {
+    this.$subscribeTo(currentPos$, function (currentPos) {
       vueResetOnColumnChange()
       vueResetRowIndex()
     })
-    ipc.on('clickFindButton', function(event, arg) {
+    ipc.on('clickFindButton', function (event, arg) {
+      // capture current edits
+      captureLatestEdit()
       let el = document.querySelector(`button .${arg}`).parentNode
       el.click()
       el.classList.add('active', 'focus')
     })
   },
   methods: {
-    getReplaceResultIcon: function() {
+    getReplaceResultIcon: function () {
       return (this.replacesRemaining > 0) ? 'glyphicon-ok' : 'glyphicon-remove'
     },
-    getFindResultIcon: function() {
+    getFindResultIcon: function () {
       return (this.foundCount && this.foundCount.length > 0) ? 'glyphicon-ok' : 'glyphicon-remove'
     },
-    findResults: function(key) {
+    findResults: function (key) {
       // show result at either find or replace view
       if (key === this.clickedFindOrReplace) {
         // TODO: tidy use cases for updatedRowIndex, so updatedCount not needed
@@ -216,7 +256,7 @@ export default {
         }
       }
     },
-    replaceResults: function(key) {
+    replaceResults: function (key) {
       // show result at either find or replace view
       if (key === this.clickedFindOrReplace) {
         if (this.replacesRemaining > -1) {
@@ -228,44 +268,47 @@ export default {
         }
       }
     },
-    inputFoundSuccessFeedback: function(key) {
+    inputFoundSuccessFeedback: function (key) {
       let element = this.initFeedbackContainer(key)
       element.classList.add('has-success')
     },
-    inputFoundFailureFeedback: function(key) {
+    inputFoundFailureFeedback: function (key) {
       let element = this.initFeedbackContainer(key)
       element.classList.add('has-error')
     },
-    initFeedbackContainer: function(key) {
+    initFeedbackContainer: function (key) {
       this.inputFoundRemoveFeedback()
       return document.querySelector(`#findAndReplace .placeholder.${key}`)
     },
-    inputFoundRemoveFeedback: function() {
-      _.forEach(document.querySelectorAll('#findAndReplace .placeholder'), function(el, index) {
+    inputFoundRemoveFeedback: function () {
+      _.forEach(document.querySelectorAll('#findAndReplace .placeholder'), function (el, index) {
         el.classList.remove('has-success')
         el.classList.remove('has-error')
       })
     },
-    getText: function(key) {
+    getText: function (key) {
       return key === 'find' ? this.findTextValue : this.replaceTextValue
     },
-    setText: function(key, value) {
+    setText: function (key, value) {
       if (key === 'find') {
         this.findTextValue = value
       } else {
         this.replaceTextValue = value
       }
+      this.resetAfterUserInput()
+    },
+    resetAfterUserInput: function () {
+      const self = this
       this.foundCounter = -1
       this.foundCount = -1
       this.resetSearchResultWrapper()
       // this.clickedFindOrReplace = null
       // wait for the css to update from resetting counters then remove all
-      const vueInputFoundRemoveFeedback = this.inputFoundRemoveFeedback
-      _.delay(function() {
-        vueInputFoundRemoveFeedback()
+      _.delay(function () {
+        self.inputFoundRemoveFeedback()
       }, 10)
     },
-    replaceText: function(direction) {
+    replaceText: function (direction) {
       // this.inputFoundRemoveFeedback()
       if (this.clickedFindOrReplace === 'find') {
         this.resetSearchResultWrapper()
@@ -286,7 +329,7 @@ export default {
         this.replaceData = hot.getData()
       }
       // console.timeEnd()
-      const selectedCoords = hot.getSelectedLast()
+      const selectedCoords = reselectHotCellFromHot(hot)
       if (selectedCoords) {
         const row = selectedCoords[0]
         const col = selectedCoords[1]
@@ -301,10 +344,8 @@ export default {
       // this.resetOnColumnChange()
       this.clickedFindOrReplace = 'replace'
     },
-    replaceAllText: function(direction) {
-      if (this.clickedFindOrReplace === 'find') {
-        this.resetSearchResultWrapper()
-      }
+    replaceAllText: function (direction) {
+      this.resetSearchResultWrapper()
       this.clickedFindOrReplace = 'replace'
       this.replaceMessageText = 'replaced'
       this.findNextOrPrevious(direction)
@@ -319,19 +360,25 @@ export default {
       hot.loadData(data)
       this.clickedFindOrReplace = 'replace'
     },
-    getReplacedAllFindTextFromCell: function(data, row, col) {
+    // Ensure replace, like find, is case insensitive or case sensitive
+    getReplacedAllFindTextFromCell: function (data, row, col) {
       let cellText = data[row][col]
+      let findText = this.findTextValue
+      if (!_isCaseSensitive) {
+        cellText = cellText.toLowerCase()
+        findText = findText.toLowerCase()
+      }
       // ensure any special characters in find text are treated as ordinary text
-      const escapedFindText = _.escapeRegExp(this.findTextValue)
+      const escapedFindText = _.escapeRegExp(findText)
       const regExp = new RegExp(escapedFindText, 'g')
       let updatedCellText = _.replace(cellText, regExp, this.replaceTextValue)
       return updatedCellText
     },
-    previousFn: function(index, arrayLength) {
+    previousFn: function (index, arrayLength) {
       index = index > 0 ? index - 1 : arrayLength - 1
       return index
     },
-    nextFn: function(index, arrayLength) {
+    nextFn: function (index, arrayLength) {
       if (index >= arrayLength - 1) {
         index = 0
       } else {
@@ -339,7 +386,7 @@ export default {
       }
       return index
     },
-    findText: function(direction) {
+    findText: function (direction) {
       if (this.clickedFindOrReplace === 'replace') {
         this.resetSearchResultWrapper()
       }
@@ -348,7 +395,7 @@ export default {
       // a new index calculation will reset this.clickedFindOrReplace so ensure for first run it is referenced again for feedback
       this.clickedFindOrReplace = 'find'
     },
-    findNextOrPrevious: function(direction) {
+    findNextOrPrevious: function (direction) {
       console.time()
       let directionFn
       if (direction === 'previous') {
@@ -368,7 +415,7 @@ export default {
         let colData = hot.getDataAtCol(currentCol)
         // indexer won't work with a header labelled: 0
         let tempHeader = currentCol + 1
-        let colObject = _.map(colData, function(item) {
+        let colObject = _.map(colData, function (item) {
           return { [tempHeader]: item }
         })
         this.currentCol = currentCol
@@ -392,13 +439,14 @@ export default {
       this.currentCol = currentCol
       this.updatedRowIndex = tempUpdatedRowIndex
     },
-    hotSearch: function(hot) {
+    hotSearch: function (hot) {
       // TODO : add loading screen here
       const search = hot.getPlugin('search')
+      _findTextValue = this.findTextValue
       search.query(this.findTextValue)
       hot.render()
     },
-    clearPreviousHotSearch: function(hot) {
+    clearPreviousHotSearch: function (hot) {
       _previousSearchClear = false
       const search = hot.getPlugin('search')
       search.query()
@@ -416,10 +464,10 @@ export default {
     //   console.timeEnd()
     //   return rowIndicies
     // },
-    hotSiftWithoutTransform: function(arrayOfObjects, headers) {
+    hotSiftWithoutTransform: function (arrayOfObjects, headers) {
       let rowIndicies = this.sift(arrayOfObjects, headers)
       // sort in ascending order
-      rowIndicies.sort(function(a, b) {
+      rowIndicies.sort(function (a, b) {
         return a - b
       })
       return rowIndicies
@@ -456,8 +504,9 @@ export default {
     // },
     // Note: sift will return 1 match for multiple matches in row
     // sift gives flexibility for reasonably fast access, but allows to search across table rows too if needed later + diacritics support
-    sift: function(arrayOfObjects, headers) {
-      var sifter = new Sifter(arrayOfObjects)
+    sift: function (arrayOfObjects, headers) {
+      // case-sensitive means no diacritics search
+      var sifter = new Sifter(arrayOfObjects, { diacritics: !_isCaseSensitive })
       let result
       let ids = []
       if (this.findTextValue) {
@@ -465,13 +514,34 @@ export default {
           fields: headers,
           conjunction: 'and'
         })
-        for (const item of result.items) {
+        const header = headers[0]
+        ids = _isCaseSensitive
+          ? this.caseSensitiveSiftResult(arrayOfObjects, header, result)
+          : this.caseInSensitiveSiftResult(arrayOfObjects, header, result)
+      }
+      return ids
+    },
+    caseSensitiveSiftResult: function (arrayOfObjects, header, result) {
+      let ids = []
+      for (const item of result.items) {
+        let nextValue = arrayOfObjects[item.id][header]
+        if (nextValue.includes(this.findTextValue)) {
           ids.push(item.id)
         }
       }
       return ids
     },
-    determineStartingRowIndex: function(currentRow, direction, directionFn) {
+    caseInSensitiveSiftResult: function (arrayOfObjects, header, result) {
+      let ids = []
+      for (const item of result.items) {
+        let nextValue = arrayOfObjects[item.id][header]
+        if (nextValue.toLowerCase().includes(this.findTextValue.toLowerCase())) {
+          ids.push(item.id)
+        }
+      }
+      return ids
+    },
+    determineStartingRowIndex: function (currentRow, direction, directionFn) {
       let index = _.sortedIndex(this.rowIndicies, currentRow)
       if (this.rowIndicies[index] === currentRow) {
         // starting row should never be the current selected row itself
@@ -490,16 +560,16 @@ export default {
       }
       return index
     },
-    updateActiveHotId: function(hotId) {
+    updateActiveHotId: function (hotId) {
       this.activeHotId = hotId
     },
-    resetOnColumnChange: function() {
+    resetOnColumnChange: function () {
       let coords = this.getHotSelection(this.activeHotId)
       if (coords && coords[1] != this.currentCol) {
         this.resetSearchResultWrapper()
       }
     },
-    resetSearchResultWrapper: function() {
+    resetSearchResultWrapper: function () {
       // reset can be called for multiple behaviours - ensure don't overwrite with previously reset/null rowIndicies
       if (!_.isEmpty(this.rowIndicies)) {
         _lastRowIndicies = this.rowIndicies
@@ -513,12 +583,12 @@ export default {
       this.replacesRemaining = -1
       this.updatedRowIndex = -1
     },
-    resetRowIndex() {
+    resetRowIndex () {
       this.updatedRowIndex = -1
     }
   }
 }
 </script>
 <style lang="styl" scoped>
-@import '~static/css/findreplace'
+    @import '~static/css/findreplace'
 </style>

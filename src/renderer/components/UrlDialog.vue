@@ -1,61 +1,82 @@
 <template>
   <div
     id="container"
-    class="container-fluid">
+    class="container-fluid"
+  >
     <form>
-      <p>
+      <div class="form-block">
+        <label
+          class="control-label url-dialog-label"
+          for="url-dialog"
+        >
+          URL:
+        </label>
         <input
-          v-validate="'url:true'"
           id="url-dialog"
-          :class="{ 'form-control': true, 'validate-danger': errors.has('url-dialog') }"
           v-model="urlText"
+          v-validate="'url:true'"
+          :class="{ 'form-control': true, 'validate-danger': errors.has('url-dialog') }"
+          autofocus
           type="text"
-          name="url-dialog">
-      </p>
+          name="url-dialog"
+        >
+      </div>
       <div
         v-show="errors.has('url-dialog')"
-        class="row help validate-danger">
+        class="row help validate-danger"
+      >
         {{ errors.first('url-dialog') }}
       </div>
       <div class="submit-container">
         <button
+          id="cancel"
+          class="btn btn-default"
+          @click.prevent="cancel"
+        >
+          Cancel
+        </button>
+        <button
           id="submit"
           class="btn btn-default"
-          @click.prevent="submit">{{ submitText }}</button> <button
-            id="cancel"
-            class="btn btn-default"
-            @click.prevent="cancel">Cancel</button>
+          @click.prevent="submit"
+        >
+          {{ submitText }}
+        </button>
       </div>
     </form>
   </div>
 </template>
 <script>
 import { ipcRenderer as ipc } from 'electron'
+import { getWindow } from '../index'
+
 export default {
   name: 'Urldialog',
-  data() {
+  data () {
     return {
       urlText: '',
       submitText: 'Open URL'
     }
   },
-  mounted: function() {
+  mounted: function () {
     const vueUpdateSubmitText = this.updateSubmitText
-    ipc.on('urlDialog', function(event, arg) {
+    ipc.on('urlDialog', function (event, arg) {
       vueUpdateSubmitText(arg)
     })
+    // web contents need focus before any input 'autofocus' attributes will work
+    getWindow('urldialog').webContents.focus()
   },
   methods: {
-    submit: function() {
+    submit: function () {
       ipc.send('urlSubmitted', this.urlText)
     },
-    cancel: function() {
+    cancel: function () {
       ipc.send('urlCancelled')
     },
-    updateSubmitText: function(text) {
+    updateSubmitText: function (text) {
       this.submitText = text
     },
-    resetUrlTextOnError: function() {
+    resetUrlTextOnError: function () {
       if (this.errors.has('url-dialog')) {
         this.urlText = ''
       }
@@ -64,8 +85,8 @@ export default {
 }
 </script>
 <style lang="styl" scoped>
-@import '~static/css/url-dialog'
+    @import '~static/css/url-dialog'
 </style>
 <style lang="styl" scoped>
-@import '~static/css/validationrules'
+    @import '~static/css/validationrules'
 </style>
