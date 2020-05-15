@@ -7,7 +7,6 @@ const {dependencies} = require('../package.json')
 const webpack = require('webpack')
 
 // despite `DeprecationWarning: Tapable.plugin is deprecated.` Do not upgrade: causes issues with handsontable creating blanks/repeats in rows
-// const BabiliWebpackPlugin = require('babili-webpack-plugin')
 const TerserPlugin = require('terser-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
@@ -41,10 +40,7 @@ let rendererConfig = {
     ...Object.keys(dependencies || {}).filter(d => !whiteListedModules.includes(d))
   ],
   optimization: !process.env.KARMA ? {
-    minimize: true,
-    minimizer: [
-      new TerserPlugin(),
-    ],
+    minimize: false,
     runtimeChunk: {
       name: 'vendor'
     },
