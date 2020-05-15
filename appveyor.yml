@@ -64,8 +64,7 @@ for:
     - yarn
     - yarn run clean
     - yarn run unit
-    - yarn run pack
-    - yarn run cucumber:postpack:impl
+    - yarn run e2e:impl
   after_test:
     - yarn run cucumber:report:badge
   on_success:
