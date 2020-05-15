@@ -1,19 +1,11 @@
 
-[![GitHub package version](https://img.shields.io/github/package-json/v/ODIQueensland/data-curator.svg)](https://github.com/ODIQueensland/data-curator/releases)
+[![GitHub package version](https://img.shields.io/github/package-json/v/mattRedBox/data-curator-test.svg)](https://github.com/mattRedBox/data-curator-test/releases)
 [![JavaScript Style Guide](https://img.shields.io/badge/js_code_style-standard-brightgreen.svg)](https://standardjs.com)
  [![vue-recommended-style](https://img.shields.io/badge/vue_code_style-recommended-brightgreen.svg?style=flat)](https://vuejs.org/v2/style-guide/#Priority-C-Recommended)
-[![Travis Build Status](https://travis-ci.org/ODIQueensland/data-curator.svg?branch=ci)](https://travis-ci.org/ODIQueensland/data-curator)
-[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/fahwo5shvb6jl9ux/branch/ci?svg=true)](https://ci.appveyor.com/project/ODIQueensland/data-curator)
-[![Appveyor Acceptance Test status](https://img.shields.io/badge/acceptance%20tests-✔passed:%2084%20%20❌failed:%200%20%20❗undefined:%200-orange.svg)](https://ci.appveyor.com/project/ODIQueensland/data-curator)
-
-
-
-
-
-
-
-
-[![Unit Test Coverage Status](https://coveralls.io/repos/github/ODIQueensland/data-curator/badge.svg?branch=ci)](https://coveralls.io/github/ODIQueensland/data-curator?branch=ci)
+[![Travis Build Status](https://travis-ci.org/mattRedBox/data-curator-test.svg?branch=ci)](https://travis-ci.org/mattRedBox/data-curator-test)
+[![Appveyor Build status](https://ci.appveyor.com/api/projects/status/fahwo5shvb6jl9ux/branch/ci?svg=true)](https://ci.appveyor.com/project/mattRedBox/data-curator-test)
+[![Appveyor Acceptance Test status](https://img.shields.io/badge/acceptance%20tests-✔passed:%2034%20%20❌failed:%200%20%20❗undefined:%20199-orange.svg)](https://ci.appveyor.com/project/mattRedBox/data-curator-test)
+[![Unit Test Coverage Status](https://coveralls.io/repos/github/mattRedBox/data-curator-testbadge.svg?branch=ci)](https://coveralls.io/github/ODIQueensland/data-curator?branch=ci)
 [![Github All Releases](https://img.shields.io/github/downloads/ODIQueensland/data-curator/total.svg)](https://github.com/ODIQueensland/data-curator/releases)
 [![Github Releases](https://img.shields.io/github/downloads/ODIQueensland/data-curator/latest/total.svg?label=Latest%20version%20downloads)](https://github.com/ODIQueensland/data-curator/releases/latest)
 
