@@ -8,6 +8,9 @@ cache:
   - node_modules
   - "$HOME/.electron"
   - "$HOME/.cache"
+os:
+  - linux
+  - osx
 before_install:
 - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/linux_install_os_dependencies_for_testing_on_ubuntu.sh; fi
@@ -38,46 +41,28 @@ jobs:
   include:
     - stage: prescript
 #     merge script may update dependencies
-      os: osx
-      before_script: ./scripts/ci_merge_script.sh
-      script: yarn
-    - os: linux
       before_script: ./scripts/ci_merge_script.sh
       script: yarn
     - stage: lint
-      os: osx
-      script: yarn run lint
-    - os: linux
       script: yarn run lint
     - stage: unittest
-      os: osx
       script:
-      - yarn run clean
       - yarn run unit
-    - os: linux
-      script:
-        - yarn run clean
-        - ./scripts/travis_headless_linux_unit_tests_script.sh
     - stage: unittestandcoverage
 #      only allow failures when not in a critical branch (ie: master, tag)
       allow_failures:
       - os: linux
       os: osx
       script:
-      - yarn run clean
       - yarn run unit
       - yarn run unit:coverage
     - os: linux
       script:
-      - yarn run clean
       - yarn run unit
     - stage: test
-      os: linux
       script: yarn run e2e:impl -- test/features/edit
-    - os: osx
-      script: yarn run e2e:impl -- test/features/file
-    - os: linux
-      script: yarn run e2e:impl -- test/features/file
+    - script: yarn run e2e:impl -- test/features/file
+    - script: yarn run e2e:impl -- test/features/file
     - stage: build
       os: osx
       script:
