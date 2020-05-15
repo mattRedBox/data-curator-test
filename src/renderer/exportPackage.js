@@ -51,7 +51,6 @@ export function generateDataPackage (filename, json) {
   zipResources(archive)
   zipProvenanceProperties(archive)
   archive.finalize()
-  return output
 }
 
 function zipJson (archive, json) {
@@ -59,8 +58,6 @@ function zipJson (archive, json) {
 }
 
 function zipResources (archive) {
-  console.log('store is:')
-  console.dir(store.getters.getTabFilenames)
   for (let filename of store.getters.getTabFilenames) {
     let name = path.basename(filename)
     archive.append(fs.createReadStream(filename), { name: name, prefix: 'data' })

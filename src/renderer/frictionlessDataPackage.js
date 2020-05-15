@@ -5,6 +5,7 @@ import hotStore from '@/store/modules/hots.js'
 import path from 'path'
 import { createZipFile } from '@/exportPackage.js'
 import { hasAllColumnNames, getValidNames } from '@/frictionlessUtilities.js'
+import _ from 'lodash'
 
 export async function createDataPackage () {
   const errorMessages = []
@@ -170,9 +171,8 @@ function addContributorsRequirements (properties, requiredMessages, entityName) 
       requiredMessages.push(`At least 1 ${entityName} contributor does not have a title.`)
       return false
     } else {
-      console.log('contributor is valid')
+      // console.log('contributor is valid')
     }
-    console.dir(contributor)
   }
   if (properties.contributors.length < 1) {
     properties.contributors = null
@@ -230,12 +230,18 @@ function addColumnProperties (descriptor, hotId) {
 function addTableProperties (descriptor, hotId) {
   let tableProperties = hotStore.state.hotTabs[hotId].tableProperties
   _.merge(descriptor, tableProperties)
-  moveMissingValues(descriptor, tableProperties)
+  moveTableSchemaProperties(descriptor, tableProperties)
 }
 
-function moveMissingValues (descriptor, tableProperties) {
+function moveTableSchemaProperties (descriptor, tableProperties) {
   _.unset(descriptor, 'missingValues')
   descriptor.schema.missingValues = tableProperties.missingValues
+  if (!_.isEmpty(tableProperties['primaryKeys'])) {
+    _.set(descriptor, `schema.primaryKey`, tableProperties['primaryKeys'])
+  }
+  if (!_.isEmpty(tableProperties['foreignKeys'])) {
+    _.set(descriptor, `schema.foreignKeys`, tableProperties['foreignKeys'])
+  }
 }
 
 function removeEmptiesFromDescriptor (descriptor) {

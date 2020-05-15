@@ -124,7 +124,6 @@ export default {
             this.setProperty(`contributors[${index}]role`, this.defaultRole)
           }
         }
-        console.dir(contributors)
         return contributors
       },
       watch () {
