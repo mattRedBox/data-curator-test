@@ -1,4 +1,8 @@
 import Vue from 'vue'
+
+// require globally for modules such as tableschema-js
+import "regenerator-runtime/runtime.js"
+
 Vue.config.devtools = false
 Vue.config.productionTip = false
 
@@ -12,8 +16,8 @@ sinon.config = {
 chai.use(sinonChai)
 
 // require all test files (files that ends with .spec.js)
-// const testsContext = require.context('./specs', true, /\.(dev|spec)/)
-const testsContext = require.context('./specs', true, /\.(dev)/)
+const testsContext = require.context('./specs', true, /\.(dev|spec)/)
+// const testsContext = require.context('./specs', true, /\.(dev)/)
 testsContext.keys().forEach(testsContext)
 
 // require all src files except main.js for coverage.

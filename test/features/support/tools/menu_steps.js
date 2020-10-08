@@ -32,13 +32,9 @@ Given(/^"Data Package Properties" is invoked$/, async function () {
   await menu.invokeActions(this.app, { name: 'Data Package Properties', type: 'toolbar menu button', sequence: 'Package' })
 })
 
-When(/^"About(?: Data Curator|)" is invoked$/, async function () {
-  let applicationMenu = 'Window'
-  if (process.platform === 'darwin') {
-    applicationMenu = 'Data Curator'
-  }
-  await menu.invokeActions(this.app, { name: 'About', type: 'application menu selection', sequence: `${applicationMenu}->About Data Curator` })
-})
+// When(/^"About" is invoked$/, async function () {
+//   await menu.invokeActions(this.app, {name: 'About', type: 'application menu selection', sequence: 'Electron->About'})
+// })
 
 When('{string} is invoked using the {string}: {string}', async function (name, type, sequence) {
   console.log(`sequence`, sequence)

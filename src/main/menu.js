@@ -1,5 +1,5 @@
 import { openFile, saveFileAs, saveFile, importDataPackageFromFile, importTableResourceSchemaFromFile } from './file.js'
-import { showUrlDialogForPackage, showUrlDialogForResourceSchema } from './url.js'
+import { showUrlDialogForPackage, showUrlDialogForResourceSchema, showUrlDialogForPackageDescriptor } from './url.js'
 import { createWindowTab, focusMainWindow } from './windows.js'
 import { importExcel } from './excel.js'
 import { showKeyboardHelp } from './help.js'
@@ -54,6 +54,18 @@ class AppMenu {
             //            enabled: false
             //          }
             //        ]
+            type: 'separator'
+          }, {
+            label: 'Import Package Properties',
+            submenu: [
+              {
+                label: 'json from URL...',
+                click () {
+                  showUrlDialogForPackageDescriptor()
+                }
+              }
+            ]
+          }, {
             type: 'separator'
           }, {
             label: 'Import Column Properties',
@@ -284,6 +296,12 @@ class AppMenu {
             click () {
               webContents().send('triggerMenuButton', 'Export')
             }
+          },
+          {
+            label: 'Export Package Properties...',
+            click () {
+              webContents().send('createJsonPackage')
+            }
           }
         ]
       }, {
@@ -314,12 +332,12 @@ class AppMenu {
           }, {
             label: 'Data Curator Help',
             click () {
-              shell.openExternal('https://odiqueensland.github.io/data-curator-help')
+              shell.openExternal('https://qcif.github.io/data-curator-help')
             }
           }, {
             label: 'Report Issues',
             click () {
-              shell.openExternal('https://github.com/ODIQueensland/data-curator/blob/develop/.github/CONTRIBUTING.md')
+              shell.openExternal('https://github.com/qcif/data-curator/blob/develop/.github/CONTRIBUTING.md')
             }
           }
         ]

@@ -7,8 +7,24 @@ import { compileAndStringifyProvenance } from '@/provenance.js'
 // import os from 'os'
 const Dialog = remote.dialog
 
-export function createZipFile (text) {
-  let json = JSON.stringify(text, null, 4)
+export function createJsonFile (jsonObj) {
+  Dialog.showSaveDialog({
+    filters: [
+      {
+        name: '*',
+        extensions: ['json']
+      }
+    ]
+  }, function (filename) {
+    if (filename === undefined) {
+      return
+    }
+    fs.writeJsonSync(filename, jsonObj, { spaces: 4 })
+  })
+}
+
+export function createZipFile (jsonObj) {
+  let json = JSON.stringify(jsonObj, null, 4)
   Dialog.showSaveDialog({
     filters: [
       {
@@ -24,7 +40,7 @@ export function createZipFile (text) {
   })
 }
 
-export function generateDataPackage (filename, json) {
+function generateDataPackage (filename, json) {
   let output = fs.createWriteStream(filename)
   let archive = archiver('zip', {
     zlib: {
@@ -32,9 +48,9 @@ export function generateDataPackage (filename, json) {
     } // Sets the compression level.
   })
   output.on('close', () => {
-    console.log(archive.pointer() + 'total bytes')
+    // console.log(archive.pointer() + ' total bytes')
   }).on('end', () => {
-    console.log('Data has been drained')
+    // console.log('Data has been drained')
   })
   archive.on('warning', function (err) {
     if (err.code === 'ENOENT') {
@@ -51,7 +67,6 @@ export function generateDataPackage (filename, json) {
   zipResources(archive)
   zipProvenanceProperties(archive)
   archive.finalize()
-  return output
 }
 
 function zipJson (archive, json) {
@@ -59,8 +74,6 @@ function zipJson (archive, json) {
 }
 
 function zipResources (archive) {
-  console.log('store is:')
-  console.dir(store.getters.getTabFilenames)
   for (let filename of store.getters.getTabFilenames) {
     let name = path.basename(filename)
     archive.append(fs.createReadStream(filename), { name: name, prefix: 'data' })
